@@ -21,6 +21,7 @@ class Univim < Formula
   service do
     run [opt_libexec/"UniVim.app/Contents/MacOS/univim"]
     keep_alive true
+    process_type :interactive
     log_path var/"log/univim.log"
     error_log_path var/"log/univim.log"
   end
