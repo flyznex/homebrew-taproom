@@ -15,7 +15,18 @@ class Univim < Formula
     # otherwise just work with the checked-in .a files.
     system "make", "app"
     libexec.install "bin/UniVim.app"
+    libexec.install "scripts/ensure_codesign_cert.sh"
     bin.install_symlink libexec/"UniVim.app/Contents/MacOS/univim"
+  end
+
+  def post_install
+    # Deliberately not part of `install`: that runs inside Homebrew's build
+    # sandbox, which blocks writing to the real login keychain entirely.
+    # Signs with a stable per-machine identity instead of the linker's
+    # default ad-hoc signature, so Accessibility permission survives
+    # rebuilds/reinstalls instead of needing to be re-granted every time.
+    system libexec/"ensure_codesign_cert.sh", "univim-cert"
+    system "codesign", "--force", "--sign", "univim-cert", (libexec/"UniVim.app").to_s
   end
 
   service do
