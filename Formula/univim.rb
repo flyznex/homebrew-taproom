@@ -15,7 +15,24 @@ class Univim < Formula
     # otherwise just work with the checked-in .a files.
     system "make", "app"
     libexec.install "bin/UniVim.app"
+    libexec.install "scripts/ensure_codesign_cert.sh"
     bin.install_symlink libexec/"UniVim.app/Contents/MacOS/univim"
+  end
+
+  def caveats
+    <<~EOS
+      UniVim.app is ad-hoc signed by default, so macOS treats every rebuild
+      as a "different app" and Accessibility permission has to be
+      re-granted after every `brew reinstall`/`brew upgrade`. Both `install`
+      and `post_install` run inside Homebrew's sandbox, which blocks writing
+      to your real login keychain -- signing with a stable identity can't
+      be automated from the Formula. Run this yourself once (and again
+      after any reinstall/upgrade) to sign with a stable per-machine
+      identity instead, so the permission survives:
+
+        #{libexec}/ensure_codesign_cert.sh univim-cert
+        codesign --force --sign univim-cert #{libexec}/UniVim.app
+    EOS
   end
 
   service do
