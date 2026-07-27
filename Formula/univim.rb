@@ -5,8 +5,14 @@ class Univim < Formula
   depends_on :macos
 
   def install
-    system "git", "submodule", "update", "--init", "--recursive"
-    system "make", "lib"
+    # lib/libvim.a and lib/libunikey.a are committed prebuilt (not rebuilt
+    # from the libvim/libunikey submodule sources on every build) -- `make
+    # lib` is a separate, occasional step for updating libvim.a from a newer
+    # submodule commit, not part of a normal build. Calling it here isn't
+    # just unnecessary: libvim's vendored vim-derived ./configure fails to
+    # detect a usable ncurses under Homebrew's sandboxed build env even
+    # though it's present, so running it breaks a build that would
+    # otherwise just work with the checked-in .a files.
     system "make", "app"
     libexec.install "bin/UniVim.app"
     bin.install_symlink libexec/"UniVim.app/Contents/MacOS/univim"
@@ -15,6 +21,7 @@ class Univim < Formula
   service do
     run [opt_libexec/"UniVim.app/Contents/MacOS/univim"]
     keep_alive true
+    process_type :interactive
     log_path var/"log/univim.log"
     error_log_path var/"log/univim.log"
   end
